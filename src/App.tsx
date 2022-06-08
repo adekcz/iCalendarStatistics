@@ -2,10 +2,11 @@ import { eventNames } from "process";
 import React, { ChangeEvent } from "react";
 import { useState, useEffect, useContext } from "react";
 import { Dispatch, SetStateAction } from "react";
+import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
 
 import "./App.css";
 
-function readFile(file: File, setLines: Dispatch<SetStateAction<string>>) {
+function readFile(file: File, setIcalJson: Dispatch<SetStateAction<ICalJSON>>) {
   const reader = new FileReader();
 
   reader.onload = (event: ProgressEvent<FileReader>) => {
@@ -19,7 +20,8 @@ function readFile(file: File, setLines: Dispatch<SetStateAction<string>>) {
         allLines.forEach((line: string) => {
           outcome += line;
         });
-        setLines(outcome);
+        const resultJSON = ICalParser.toJSON(file);
+        setIcalJson(resultJSON);
       } else {
         console.log("file is not string");
       }
@@ -47,7 +49,7 @@ function App() {
     })
   );
 
-  let [content, setContent] = useState("empty");
+  let [content, setContent] = useState<ICalJSON>(ICalParser.toJSON(""));
   // On file select (from the pop up)
   let onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file: File = (event.target.files as FileList)[0];
@@ -65,7 +67,10 @@ function App() {
     // Details of the uploaded file
     console.log(file);
 
-    let lines = readFile(file, (val) => {console.log(val); setContent(val)});
+    let lines = readFile(file, (val) => {
+      console.log(val);
+      setContent(val);
+    });
     console.log(lines);
 
     // Request made to the backend api
@@ -98,15 +103,77 @@ function App() {
     }
   };
 
+  function toDate(date: string): Date {
+    if (date.length == 8) {
+      return new Date(
+        `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(
+          6,
+          8
+        )}`
+      );
+    }
+    return new Date(
+      `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(
+        6,
+        8
+      )}T${date.substring(9, 11)}:${date.substring(11, 13)}:${date.substring(
+        13,
+        date.length
+      )}`
+    );
+  }
+
+  let totalMinutes = content.events.map(event => getTimeDifference(event)).reduce((a,b) => a+b, 0);
+  let totalHours = totalMinutes / 60;
+  let totalDays = totalHours / 24;
+
+  function getTimeDifference(event: EventJSON) {
+    let startDate: Date, endDate: Date;
+    if (event.dtstart) {
+      startDate = toDate(event.dtstart.value);
+    } else {
+      throw "no start date";
+    }
+
+    if (event.dtend) {
+      endDate = toDate(event.dtend.value);
+    } else {
+      throw "no end date";
+    }
+    return (endDate.getTime() - startDate.getTime()) / (60 * 1000);
+  }
   return (
     <div>
-      <h1>GeeksforGeeks</h1>
-      <h3>File Upload using React!</h3>
       <div>
-        <input type="file" onChange={onFileChange} />
-        <button onClick={onFileUpload}>Upload!</button>
+        <h1>iCal statistics</h1>
+        <h3>File Upload using React!</h3>
+        <div>
+          <input type="file" onChange={onFileChange} />
+          <button onClick={onFileUpload}>Upload!</button>
+        </div>
+        {fileData()}
       </div>
-      {fileData()}
+      <div>
+        <div>
+        <p>
+          total minutes: {totalMinutes}
+          </p>
+          <p>
+          total hours: {totalHours}
+          </p>
+          <p>
+          total days: {totalDays}
+          </p>
+        </div>
+        <ul>
+          {content.events.map((event) => (
+            <li key={event.uid}>
+              {" "}
+              {event.summary} <p>minutes: {getTimeDifference(event)}</p>{" "}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
