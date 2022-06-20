@@ -42,6 +42,87 @@ function readFile(file: File, setIcalJson: Dispatch<SetStateAction<ICalJSON>>) {
   reader.readAsText(file);
 }
 
+function toDate(date: string): Date {
+  if (date.length == 8) {
+    return new Date(
+      `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)}`
+    );
+  }
+  return new Date(
+    `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(
+      6,
+      8
+    )}T${date.substring(9, 11)}:${date.substring(11, 13)}:${date.substring(
+      13,
+      date.length
+    )}`
+  );
+}
+
+function getTimeDifference(event: EventJSON) {
+  let startDate: Date, endDate: Date;
+  if (event.dtstart) {
+    startDate = toDate(event.dtstart.value);
+  } else {
+    throw "no start date";
+  }
+
+  if (event.dtend) {
+    endDate = toDate(event.dtend.value);
+  } else {
+    throw "no end date";
+  }
+  return (endDate.getTime() - startDate.getTime()) / (60 * 1000);
+}
+
+interface FileDataProps {
+  file: File;
+  onFileChange: any;
+  onFileUpload: any;
+}
+
+// File content to be displayed after
+// file upload is complete
+function FileData(props: FileDataProps) {
+  const node = (
+    <div>
+      <h3>File Upload using React!</h3>
+      <div>
+        <input type="file" onChange={props.onFileChange} />
+        <button onClick={props.onFileUpload}>Upload!</button>
+      </div>
+    </div>
+  );
+  if (props.file) {
+    return (
+      <div>
+        {node}
+        <div>
+          <h2>File Details:</h2>
+
+          <p>File Name: {props.file.name}</p>
+
+          <p>File Type: {props.file.type}</p>
+
+          <p>
+            Last Modified: {new Date(props.file.lastModified).toISOString()}
+          </p>
+        </div>
+      </div>
+    );
+  } else {
+    return (
+      <div>
+        {node}
+        <div>
+          <br />
+          <h4>Choose before Pressing the Upload button</h4>
+        </div>
+      </div>
+    );
+  }
+}
+
 function App() {
   let [file, setFile] = useState<File>(
     new File(["foo"], "foo.txt", {
@@ -78,98 +159,43 @@ function App() {
     //axios.post("api/uploadfile", formData);
   };
 
-  // File content to be displayed after
-  // file upload is complete
-  let fileData = () => {
-    if (file) {
-      return (
-        <div>
-          <h2>File Details:</h2>
-
-          <p>File Name: {file.name}</p>
-
-          <p>File Type: {file.type}</p>
-
-          <p>Last Modified: {new Date(file.lastModified).toISOString()}</p>
-        </div>
-      );
-    } else {
-      return (
-        <div>
-          <br />
-          <h4>Choose before Pressing the Upload button</h4>
-        </div>
-      );
-    }
-  };
-
-  function toDate(date: string): Date {
-    if (date.length == 8) {
-      return new Date(
-        `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(
-          6,
-          8
-        )}`
-      );
-    }
-    return new Date(
-      `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(
-        6,
-        8
-      )}T${date.substring(9, 11)}:${date.substring(11, 13)}:${date.substring(
-        13,
-        date.length
-      )}`
-    );
-  }
-
-  let totalMinutes = content.events.map(event => getTimeDifference(event)).reduce((a,b) => a+b, 0);
+  let totalMinutes = content.events
+    .map((event) => getTimeDifference(event))
+    .reduce((a, b) => a + b, 0);
   let totalHours = totalMinutes / 60;
   let totalDays = totalHours / 24;
 
-  function getTimeDifference(event: EventJSON) {
-    let startDate: Date, endDate: Date;
-    if (event.dtstart) {
-      startDate = toDate(event.dtstart.value);
-    } else {
-      throw "no start date";
-    }
-
-    if (event.dtend) {
-      endDate = toDate(event.dtend.value);
-    } else {
-      throw "no end date";
-    }
-    return (endDate.getTime() - startDate.getTime()) / (60 * 1000);
-  }
+  let [checked, setChecked] = useState(false);
   return (
     <div>
       <div>
         <h1>iCal statistics</h1>
-        <h3>File Upload using React!</h3>
-        <div>
-          <input type="file" onChange={onFileChange} />
-          <button onClick={onFileUpload}>Upload!</button>
-        </div>
-        {fileData()}
+        <FileData
+          file={file}
+          onFileChange={onFileChange}
+          onFileUpload={onFileUpload}
+        />
       </div>
       <div>
         <div>
-        <p>
-          total minutes: {totalMinutes}
-          </p>
-          <p>
-          total hours: {totalHours}
-          </p>
-          <p>
-          total days: {totalDays}
-          </p>
+          <p>total minutes: {totalMinutes}</p>
+          <p>total hours: {totalHours}</p>
+          <p>total days: {totalDays}</p>
         </div>
         <ul>
           {content.events.map((event) => (
-            <li key={event.uid}>
-              {" "}
-              {event.summary} <p>minutes: {getTimeDifference(event)}</p>{" "}
+            <li key={event.uid} className={checked ? "checked" : ""}>
+              <p>
+                <label>
+                  remove from total:{" "}
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(val) => setChecked(val.target.checked)}
+                  />
+                </label>
+              </p>
+              {event.summary} <p>minutes: {getTimeDifference(event)}</p>
             </li>
           ))}
         </ul>
