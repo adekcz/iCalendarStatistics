@@ -42,6 +42,29 @@ function readFile(file: File, setIcalJson: Dispatch<SetStateAction<ICalJSON>>) {
   reader.readAsText(file);
 }
 
+// On file upload (click the upload button)
+function onFileUpload(file: File, setContent: React.Dispatch<React.SetStateAction<ICalJSON>>) {
+  // Create an object of formData
+  const formData = new FormData();
+
+  // Update the formData object
+  formData.append("myFile", file, file.name);
+
+  // Details of the uploaded file
+  console.log(file);
+
+  let lines = readFile(file, (val) => {
+    console.log(val);
+    setContent(val);
+  });
+  console.log(lines);
+
+  // Request made to the backend api
+  // Send formData object
+  //axios.post("api/uploadfile", formData);
+};
+
+
 function toDate(date: string): Date {
   if (date.length == 8) {
     return new Date(
@@ -137,28 +160,6 @@ function App() {
     setFile(file);
   };
 
-  // On file upload (click the upload button)
-  let onFileUpload = () => {
-    // Create an object of formData
-    const formData = new FormData();
-
-    // Update the formData object
-    formData.append("myFile", file, file.name);
-
-    // Details of the uploaded file
-    console.log(file);
-
-    let lines = readFile(file, (val) => {
-      console.log(val);
-      setContent(val);
-    });
-    console.log(lines);
-
-    // Request made to the backend api
-    // Send formData object
-    //axios.post("api/uploadfile", formData);
-  };
-
   let totalMinutes = content.events
     .map((event) => getTimeDifference(event))
     .reduce((a, b) => a + b, 0);
@@ -173,7 +174,7 @@ function App() {
         <FileData
           file={file}
           onFileChange={onFileChange}
-          onFileUpload={onFileUpload}
+          onFileUpload={onFileUpload(file, setContent)}
         />
       </div>
       <div>
