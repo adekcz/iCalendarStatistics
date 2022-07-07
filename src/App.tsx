@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction } from "react";
 import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
 
 import "./App.css";
+import { stringify } from "querystring";
 
 function readFile(file: File, setIcalJson: Dispatch<SetStateAction<ICalJSON>>) {
   const reader = new FileReader();
@@ -43,7 +44,11 @@ function readFile(file: File, setIcalJson: Dispatch<SetStateAction<ICalJSON>>) {
 }
 
 // On file upload (click the upload button)
-function onFileUpload(file: File, setContent: React.Dispatch<React.SetStateAction<ICalJSON>>) {
+function onFileUpload(
+  file: File,
+  setContent: React.Dispatch<React.SetStateAction<ICalJSON>>,
+  recalculateInclusion: () => void
+) {
   // Create an object of formData
   const formData = new FormData();
 
@@ -56,14 +61,14 @@ function onFileUpload(file: File, setContent: React.Dispatch<React.SetStateActio
   let lines = readFile(file, (val) => {
     console.log(val);
     setContent(val);
+    recalculateInclusion();
   });
   console.log(lines);
 
   // Request made to the backend api
   // Send formData object
   //axios.post("api/uploadfile", formData);
-};
-
+}
 
 function toDate(date: string): Date {
   if (date.length == 8) {
@@ -146,6 +151,18 @@ function FileData(props: FileDataProps) {
   }
 }
 
+function eventsInclusionDefault(content: ICalJSON) {
+  return content.events.reduce(function (
+    result: Map<string, boolean>,
+    event: EventJSON,
+    i: Number
+  ) {
+    result.set(event.uid!, false); //hack to use !
+    return result;
+  },
+  new Map());
+}
+
 function App() {
   let [file, setFile] = useState<File>(
     new File(["foo"], "foo.txt", {
@@ -166,7 +183,30 @@ function App() {
   let totalHours = totalMinutes / 60;
   let totalDays = totalHours / 24;
 
-  let [checked, setChecked] = useState(false);
+
+
+
+
+  let [includeInCalculation, setIncludeInCalculation] = useState(
+    eventsInclusionDefault(content)
+  );
+
+  let selectedMinutes = content.events.filter((event) => includeInCalculation.get(event.uid!))
+  .map((event) => getTimeDifference(event))
+  .reduce((a, b) => a + b, 0);
+let selectedHours = selectedMinutes / 60;
+let selectedDays = selectedHours / 24;
+
+  function recalculateInclusion(){
+    setIncludeInCalculation(eventsInclusionDefault(content));
+  }
+   function setChecked(uid: string, checked: boolean){
+      let copy = new Map();  
+    includeInCalculation.forEach((val, key) => copy.set(key, val) );
+    copy.set(uid, checked);
+    setIncludeInCalculation(copy);
+ }
+
   return (
     <div>
       <div>
@@ -174,25 +214,34 @@ function App() {
         <FileData
           file={file}
           onFileChange={onFileChange}
-          onFileUpload={onFileUpload(file, setContent)}
+          onFileUpload={() =>
+            onFileUpload(file, setContent, recalculateInclusion)
+          }
         />
       </div>
       <div>
+        <h2> global stats</h2>
         <div>
           <p>total minutes: {totalMinutes}</p>
           <p>total hours: {totalHours}</p>
           <p>total days: {totalDays}</p>
         </div>
+        <h2> selected stats</h2>
+        <div>
+          <p>selected minutes: {selectedMinutes}</p>
+          <p>selected hours: {selectedHours}</p>
+          <p>selected days: {selectedDays}</p>
+        </div>
         <ul>
           {content.events.map((event) => (
-            <li key={event.uid} className={checked ? "checked" : ""}>
+            <li key={event.uid} className={includeInCalculation.get(event.uid!) ? "checked" : ""}>
               <p>
                 <label>
                   remove from total:{" "}
                   <input
                     type="checkbox"
-                    checked={checked}
-                    onChange={(val) => setChecked(val.target.checked)}
+                    checked={includeInCalculation.get(event.uid!)}
+                    onChange={(val) => setChecked(event.uid!, val.target.checked)}
                   />
                 </label>
               </p>
