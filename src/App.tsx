@@ -232,23 +232,21 @@ let selectedDays = selectedHours / 24;
           <p>selected hours: {selectedHours}</p>
           <p>selected days: {selectedDays}</p>
         </div>
-        <ul>
+        <table>
+          <tr><th>summary</th><th>minutes</th><th>controls</th></tr>
           {content.events.map((event) => (
-            <li key={event.uid} className={includeInCalculation.get(event.uid!) ? "checked" : ""}>
-              <p>
-                <label>
-                  remove from total:{" "}
-                  <input
+            <tr key={event.uid} className={includeInCalculation.get(event.uid!) ? "checked" : ""}>
+              <td>{event.summary}</td>
+              <td> {getTimeDifference(event)}</td>
+              <td> <input
                     type="checkbox"
                     checked={includeInCalculation.get(event.uid!)}
                     onChange={(val) => setChecked(event.uid!, val.target.checked)}
                   />
-                </label>
-              </p>
-              {event.summary} <p>minutes: {getTimeDifference(event)}</p>
-            </li>
+                  </td>
+            </tr>
           ))}
-        </ul>
+        </table>
       </div>
     </div>
   );
