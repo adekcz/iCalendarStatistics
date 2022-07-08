@@ -106,7 +106,6 @@ function getTimeDifference(event: EventJSON) {
 interface FileDataProps {
   file: File;
   onFileChange: any;
-  onFileUpload: any;
 }
 
 // File content to be displayed after
@@ -117,7 +116,6 @@ function FileData(props: FileDataProps) {
       <h3>File Upload using React!</h3>
       <div>
         <input type="file" onChange={props.onFileChange} />
-        <button onClick={props.onFileUpload}>Upload!</button>
       </div>
     </div>
   );
@@ -175,6 +173,7 @@ function App() {
   let onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file: File = (event.target.files as FileList)[0];
     setFile(file);
+    onFileUpload(file, setContent, recalculateInclusion);
   };
 
   let totalMinutes = content.events
@@ -214,9 +213,6 @@ let selectedDays = selectedHours / 24;
         <FileData
           file={file}
           onFileChange={onFileChange}
-          onFileUpload={() =>
-            onFileUpload(file, setContent, recalculateInclusion)
-          }
         />
       </div>
       <div>
