@@ -5,7 +5,7 @@ import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
 
 import "./App.css";
 
-function readFile(file: File, setIcalJson: Dispatch<SetStateAction<ICalJSON>>) {
+function readFile(file: File, setIcalJson: (param: ICalJSON) => void ) {
   const reader = new FileReader();
 
   reader.onload = (event: ProgressEvent<FileReader>) => {
@@ -39,7 +39,7 @@ function readFile(file: File, setIcalJson: Dispatch<SetStateAction<ICalJSON>>) {
 function onFileUpload(
   file: File,
   setContent: React.Dispatch<React.SetStateAction<ICalJSON>>,
-  recalculateInclusion: () => void
+  recalculateInclusion: (val: ICalJSON) => void
 ) {
   // Create an object of formData
   const formData = new FormData();
@@ -54,7 +54,7 @@ function onFileUpload(
     console.log(val);
     setContent(ICalParser.toJSON(""));
     setContent(val);
-    recalculateInclusion();
+    recalculateInclusion(val);
   });
   console.log(lines);
 
@@ -165,13 +165,19 @@ function App() {
   let selectedHours = selectedMinutes / 60;
   let selectedDays = selectedHours / 24;
 
-  function recalculateInclusion() {
-    setIncludeInCalculation(eventsInclusionDefault(content));
+  function recalculateInclusion(val: ICalJSON) {
+    setIncludeInCalculation(eventsInclusionDefault(val));
   }
   function setChecked(event: EventJSON, checked: boolean) {
     let copy = new Map();
     includeInCalculation.forEach((val, key) => copy.set(key, val));
     copy.set(getIdentifier(event), checked);
+    setIncludeInCalculation(copy);
+  }
+
+  function markAll(value: boolean){
+    let copy = new Map();
+    includeInCalculation.forEach((_, key) => copy.set(key, value));
     setIncludeInCalculation(copy);
   }
 
@@ -206,6 +212,12 @@ function App() {
         </div>
         <div>
           <h2>Events</h2>
+          <button onClick={() => markAll(true)}>
+            Select all
+          </button>
+          <button onClick={() => markAll(false)}>
+            Deselect all
+          </button>
           <table>
             <thead>
               <tr>
