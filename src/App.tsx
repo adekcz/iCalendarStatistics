@@ -1,11 +1,9 @@
-import { eventNames } from "process";
 import React, { ChangeEvent } from "react";
-import { useState, useEffect, useContext } from "react";
+import { useState, } from "react";
 import { Dispatch, SetStateAction } from "react";
 import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
 
 import "./App.css";
-import { stringify } from "querystring";
 
 function readFile(file: File, setIcalJson: Dispatch<SetStateAction<ICalJSON>>) {
   const reader = new FileReader();
@@ -15,12 +13,6 @@ function readFile(file: File, setIcalJson: Dispatch<SetStateAction<ICalJSON>>) {
     if (target && target.result) {
       const file = target.result;
       if (typeof file === "string") {
-        const allLines = file.split(/\r\n|\n/);
-        // Reading line by line
-        let outcome = "";
-        allLines.forEach((line: string) => {
-          outcome += line;
-        });
         const resultJSON = ICalParser.toJSON(file);
         setIcalJson(resultJSON);
       } else {
@@ -71,7 +63,7 @@ function onFileUpload(
 }
 
 function toDate(date: string): Date {
-  if (date.length == 8) {
+  if (date.length === 8) {
     return new Date(
       `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)}`
     );
@@ -92,13 +84,13 @@ function getTimeDifference(event: EventJSON) {
   if (event.dtstart) {
     startDate = toDate(event.dtstart.value);
   } else {
-    throw "no start date";
+    throw new Error("no start date");
   }
 
   if (event.dtend) {
     endDate = toDate(event.dtend.value);
   } else {
-    throw "no end date";
+    throw new Error("no end date");
   }
   return (endDate.getTime() - startDate.getTime()) / (60 * 1000);
 }
@@ -229,19 +221,24 @@ let selectedDays = selectedHours / 24;
           <p>selected days: {selectedDays}</p>
         </div>
         <table>
-          <tr><th>summary</th><th>minutes</th><th>controls</th></tr>
+          <thead>
+            <tr><th>summary</th><th>minutes</th><th>controls</th></tr>
+            </thead>
+          <tbody>
+            
           {content.events.map((event) => (
             <tr key={event.uid} className={includeInCalculation.get(event.uid!) ? "checked" : ""}>
               <td>{event.summary}</td>
               <td> {getTimeDifference(event)}</td>
               <td> <input
                     type="checkbox"
-                    checked={includeInCalculation.get(event.uid!)}
+                    checked={includeInCalculation.get(event.uid!) || false}
                     onChange={(val) => setChecked(event.uid!, val.target.checked)}
                   />
                   </td>
             </tr>
           ))}
+          </tbody>
         </table>
       </div>
     </div>
