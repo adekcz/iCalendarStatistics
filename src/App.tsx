@@ -219,7 +219,7 @@ function App() {
             <tr>
               <th>summary</th>
               <th>minutes</th>
-              <th>controls</th>
+              <th>include</th>
             </tr>
           </thead>
           <tbody>
@@ -233,14 +233,17 @@ function App() {
                 <td>{event.summary}</td>
                 <td> {getTimeDifference(event)}</td>
                 <td>
-                  {" "}
-                  <input
-                    type="checkbox"
-                    checked={includeInCalculation.get(event.uid!) || false}
-                    onChange={(val) =>
-                      setChecked(event.uid!, val.target.checked)
-                    }
-                  />
+                  <label htmlFor={event.uid + "_CB"}>
+                    
+                    <input
+                      id={event.uid + "_CB"}
+                      type="checkbox"
+                      checked={includeInCalculation.get(event.uid!) || false}
+                      onChange={(val) =>
+                        setChecked(event.uid!, val.target.checked)
+                      }
+                    />
+                   </label>
                 </td>
               </tr>
             ))}
