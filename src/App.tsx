@@ -105,7 +105,7 @@ interface FileDataProps {
 function FileData(props: FileDataProps) {
   const node = (
     <div>
-      <h3>File Upload using React!</h3>
+      <h3>Select *.ics file exported from your calendar.</h3>
       <div>
         <input type="file" onChange={props.onFileChange} />
       </div>
