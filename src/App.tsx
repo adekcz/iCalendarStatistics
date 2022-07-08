@@ -134,11 +134,7 @@ function eventsInclusionDefault(content: ICalJSON) {
 }
 
 function App() {
-  let [file, setFile] = useState<File>(
-    new File(["foo"], "foo.txt", {
-      type: "text/plain",
-    })
-  );
+  let [file, setFile] = useState<File>();
 
   let [content, setContent] = useState<ICalJSON>(ICalParser.toJSON(""));
   // On file select (from the pop up)
@@ -180,7 +176,7 @@ function App() {
     includeInCalculation.forEach((_, key) => copy.set(key, value));
     setIncludeInCalculation(copy);
   }
-
+  let fileDataTile = file ? ( <FileData file={file} onFileChange={onFileChange} /> ) : null;
   return (
     <div>
       <div>
@@ -192,7 +188,7 @@ function App() {
           </div>
         </div>
         <div className="rowFlex">
-          <FileData file={file} onFileChange={onFileChange} />
+          {fileDataTile}
           <div className="infoTile">
             <h2> global stats</h2>
             <div>
