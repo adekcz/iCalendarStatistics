@@ -103,42 +103,17 @@ interface FileDataProps {
 // File content to be displayed after
 // file upload is complete
 function FileData(props: FileDataProps) {
-  const node = (
-    <div>
-      <h3>Select *.ics file exported from your calendar.</h3>
-      <div>
-        <input type="file" onChange={props.onFileChange} />
-      </div>
+  return (
+    <div className="infoTile">
+      <h2>File Details:</h2>
+
+      <p>File Name: {props.file.name}</p>
+
+      <p>File Type: {props.file.type}</p>
+
+      <p>Last Modified: {new Date(props.file.lastModified).toLocaleString()}</p>
     </div>
   );
-  if (props.file) {
-    return (
-      <div>
-        {node}
-        <div>
-          <h2>File Details:</h2>
-
-          <p>File Name: {props.file.name}</p>
-
-          <p>File Type: {props.file.type}</p>
-
-          <p>
-            Last Modified: {new Date(props.file.lastModified).toISOString()}
-          </p>
-        </div>
-      </div>
-    );
-  } else {
-    return (
-      <div>
-        {node}
-        <div>
-          <br />
-          <h4>Choose before Pressing the Upload button</h4>
-        </div>
-      </div>
-    );
-  }
 }
 
 function eventsInclusionDefault(content: ICalJSON) {
@@ -199,20 +174,30 @@ function App() {
     <div>
       <div>
         <h1>iCal statistics</h1>
-        <FileData file={file} onFileChange={onFileChange} />
-      </div>
-      <div>
-        <h2> global stats</h2>
         <div>
-          <p>total minutes: {totalMinutes}</p>
-          <p>total hours: {totalHours}</p>
-          <p>total days: {totalDays}</p>
+          <h3>Select *.ics file exported from your calendar.</h3>
+          <div>
+            <input type="file" onChange={onFileChange} />
+          </div>
         </div>
-        <h2> selected stats</h2>
-        <div>
-          <p>selected minutes: {selectedMinutes}</p>
-          <p>selected hours: {selectedHours}</p>
-          <p>selected days: {selectedDays}</p>
+        <div className="rowFlex">
+          <FileData file={file} onFileChange={onFileChange} />
+          <div className="infoTile">
+            <h2> global stats</h2>
+            <div>
+              <p>total minutes: {Number(totalMinutes).toFixed(2)}</p>
+              <p>total hours: {Number(totalHours).toFixed(2)}</p>
+              <p>total days: {Number(totalDays).toFixed(2)}</p>
+            </div>
+          </div>
+          <div className="infoTile">
+            <h2> selected stats</h2>
+            <div>
+              <p>selected minutes: {Number(selectedMinutes).toFixed(2)}</p>
+              <p>selected hours: {Number(selectedHours).toFixed(2)}</p>
+              <p>selected days: {Number(selectedDays).toFixed(2)}</p>
+            </div>
+          </div>
         </div>
         <table>
           <thead>
@@ -234,7 +219,6 @@ function App() {
                 <td> {getTimeDifference(event)}</td>
                 <td>
                   <label htmlFor={event.uid + "_CB"}>
-                    
                     <input
                       id={event.uid + "_CB"}
                       type="checkbox"
@@ -243,7 +227,7 @@ function App() {
                         setChecked(event.uid!, val.target.checked)
                       }
                     />
-                   </label>
+                  </label>
                 </td>
               </tr>
             ))}
