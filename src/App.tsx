@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from "react";
-import { useState, } from "react";
+import { useState } from "react";
 import { Dispatch, SetStateAction } from "react";
 import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
 
@@ -174,38 +174,32 @@ function App() {
   let totalHours = totalMinutes / 60;
   let totalDays = totalHours / 24;
 
-
-
-
-
   let [includeInCalculation, setIncludeInCalculation] = useState(
     eventsInclusionDefault(content)
   );
 
-  let selectedMinutes = content.events.filter((event) => includeInCalculation.get(event.uid!))
-  .map((event) => getTimeDifference(event))
-  .reduce((a, b) => a + b, 0);
-let selectedHours = selectedMinutes / 60;
-let selectedDays = selectedHours / 24;
+  let selectedMinutes = content.events
+    .filter((event) => includeInCalculation.get(event.uid!))
+    .map((event) => getTimeDifference(event))
+    .reduce((a, b) => a + b, 0);
+  let selectedHours = selectedMinutes / 60;
+  let selectedDays = selectedHours / 24;
 
-  function recalculateInclusion(){
+  function recalculateInclusion() {
     setIncludeInCalculation(eventsInclusionDefault(content));
   }
-   function setChecked(uid: string, checked: boolean){
-      let copy = new Map();  
-    includeInCalculation.forEach((val, key) => copy.set(key, val) );
+  function setChecked(uid: string, checked: boolean) {
+    let copy = new Map();
+    includeInCalculation.forEach((val, key) => copy.set(key, val));
     copy.set(uid, checked);
     setIncludeInCalculation(copy);
- }
+  }
 
   return (
     <div>
       <div>
         <h1>iCal statistics</h1>
-        <FileData
-          file={file}
-          onFileChange={onFileChange}
-        />
+        <FileData file={file} onFileChange={onFileChange} />
       </div>
       <div>
         <h2> global stats</h2>
@@ -222,22 +216,34 @@ let selectedDays = selectedHours / 24;
         </div>
         <table>
           <thead>
-            <tr><th>summary</th><th>minutes</th><th>controls</th></tr>
-            </thead>
+            <tr>
+              <th>summary</th>
+              <th>minutes</th>
+              <th>controls</th>
+            </tr>
+          </thead>
           <tbody>
-            
-          {content.events.map((event) => (
-            <tr key={event.uid} className={includeInCalculation.get(event.uid!) ? "checked" : ""}>
-              <td>{event.summary}</td>
-              <td> {getTimeDifference(event)}</td>
-              <td> <input
+            {content.events.map((event) => (
+              <tr
+                key={event.uid}
+                className={
+                  includeInCalculation.get(event.uid!) ? "checked" : ""
+                }
+              >
+                <td>{event.summary}</td>
+                <td> {getTimeDifference(event)}</td>
+                <td>
+                  {" "}
+                  <input
                     type="checkbox"
                     checked={includeInCalculation.get(event.uid!) || false}
-                    onChange={(val) => setChecked(event.uid!, val.target.checked)}
+                    onChange={(val) =>
+                      setChecked(event.uid!, val.target.checked)
+                    }
                   />
-                  </td>
-            </tr>
-          ))}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
