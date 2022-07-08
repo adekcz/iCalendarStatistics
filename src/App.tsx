@@ -199,40 +199,43 @@ function App() {
             </div>
           </div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>summary</th>
-              <th>minutes</th>
-              <th>include</th>
-            </tr>
-          </thead>
-          <tbody>
-            {content.events.map((event) => (
-              <tr
-                key={event.uid}
-                className={
-                  includeInCalculation.get(event.uid!) ? "checked" : ""
-                }
-              >
-                <td>{event.summary}</td>
-                <td> {getTimeDifference(event)}</td>
-                <td>
-                  <label htmlFor={event.uid + "_CB"}>
-                    <input
-                      id={event.uid + "_CB"}
-                      type="checkbox"
-                      checked={includeInCalculation.get(event.uid!) || false}
-                      onChange={(val) =>
-                        setChecked(event.uid!, val.target.checked)
-                      }
-                    />
-                  </label>
-                </td>
+        <div>
+          <h2>Events</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>summary</th>
+                <th>minutes</th>
+                <th>include</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {content.events.map((event) => (
+                <tr
+                  key={event.uid}
+                  className={
+                    includeInCalculation.get(event.uid!) ? "checked" : ""
+                  }
+                >
+                  <td>{event.summary}</td>
+                  <td> {getTimeDifference(event)}</td>
+                  <td>
+                    <label htmlFor={event.uid + "_CB"}>
+                      <input
+                        id={event.uid + "_CB"}
+                        type="checkbox"
+                        checked={includeInCalculation.get(event.uid!) || false}
+                        onChange={(val) =>
+                          setChecked(event.uid!, val.target.checked)
+                        }
+                      />
+                    </label>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
