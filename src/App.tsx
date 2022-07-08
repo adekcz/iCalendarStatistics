@@ -117,7 +117,7 @@ function FileData(props: FileDataProps) {
   );
 }
 
-function getIdentifier(event: EventJSON) {
+function getEventJsonHashCode(event: EventJSON) {
   return event.uid! + event.dtstamp?.value + event.dtstart.value;
 }
 
@@ -127,7 +127,7 @@ function eventsInclusionDefault(content: ICalJSON) {
     event: EventJSON,
     i: Number
   ) {
-    result.set(getIdentifier(event), false); //hack to use !
+    result.set(getEventJsonHashCode(event), false); //hack to use !
     return result;
   },
   new Map());
@@ -159,7 +159,7 @@ function App() {
   );
 
   let selectedMinutes = content.events
-    .filter((event) => includeInCalculation.get(getIdentifier(event)))
+    .filter((event) => includeInCalculation.get(getEventJsonHashCode(event)))
     .map((event) => getTimeDifference(event))
     .reduce((a, b) => a + b, 0);
   let selectedHours = selectedMinutes / 60;
@@ -171,7 +171,7 @@ function App() {
   function setChecked(event: EventJSON, checked: boolean) {
     let copy = new Map();
     includeInCalculation.forEach((val, key) => copy.set(key, val));
-    copy.set(getIdentifier(event), checked);
+    copy.set(getEventJsonHashCode(event), checked);
     setIncludeInCalculation(copy);
   }
 
@@ -229,19 +229,19 @@ function App() {
             <tbody>
               {content.events.map((event) => (
                 <tr
-                  key={getIdentifier(event)}
+                  key={getEventJsonHashCode(event)}
                   className={
-                    includeInCalculation.get(getIdentifier(event)) ? "checked" : ""
+                    includeInCalculation.get(getEventJsonHashCode(event)) ? "checked" : ""
                   }
                 >
                   <td>{event.summary}</td>
                   <td> {getTimeDifference(event)}</td>
                   <td>
-                    <label htmlFor={getIdentifier(event)+ "_CB"}>
+                    <label htmlFor={getEventJsonHashCode(event)+ "_CB"}>
                       <input
-                        id={getIdentifier(event) + "_CB"}
+                        id={getEventJsonHashCode(event) + "_CB"}
                         type="checkbox"
-                        checked={includeInCalculation.get(getIdentifier(event)) || false}
+                        checked={includeInCalculation.get(getEventJsonHashCode(event)) || false}
                         onChange={(val) =>
                           setChecked(event, val.target.checked)
                         }
