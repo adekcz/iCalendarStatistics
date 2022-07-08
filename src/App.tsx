@@ -52,6 +52,7 @@ function onFileUpload(
 
   let lines = readFile(file, (val) => {
     console.log(val);
+    setContent(ICalParser.toJSON(""));
     setContent(val);
     recalculateInclusion();
   });
@@ -116,13 +117,17 @@ function FileData(props: FileDataProps) {
   );
 }
 
+function getIdentifier(event: EventJSON) {
+  return event.uid! + event.dtstamp?.value + event.dtstart.value;
+}
+
 function eventsInclusionDefault(content: ICalJSON) {
   return content.events.reduce(function (
     result: Map<string, boolean>,
     event: EventJSON,
     i: Number
   ) {
-    result.set(event.uid!, false); //hack to use !
+    result.set(getIdentifier(event), false); //hack to use !
     return result;
   },
   new Map());
@@ -154,7 +159,7 @@ function App() {
   );
 
   let selectedMinutes = content.events
-    .filter((event) => includeInCalculation.get(event.uid!))
+    .filter((event) => includeInCalculation.get(getIdentifier(event)))
     .map((event) => getTimeDifference(event))
     .reduce((a, b) => a + b, 0);
   let selectedHours = selectedMinutes / 60;
@@ -163,10 +168,10 @@ function App() {
   function recalculateInclusion() {
     setIncludeInCalculation(eventsInclusionDefault(content));
   }
-  function setChecked(uid: string, checked: boolean) {
+  function setChecked(event: EventJSON, checked: boolean) {
     let copy = new Map();
     includeInCalculation.forEach((val, key) => copy.set(key, val));
-    copy.set(uid, checked);
+    copy.set(getIdentifier(event), checked);
     setIncludeInCalculation(copy);
   }
 
@@ -212,21 +217,21 @@ function App() {
             <tbody>
               {content.events.map((event) => (
                 <tr
-                  key={event.uid}
+                  key={getIdentifier(event)}
                   className={
-                    includeInCalculation.get(event.uid!) ? "checked" : ""
+                    includeInCalculation.get(getIdentifier(event)) ? "checked" : ""
                   }
                 >
                   <td>{event.summary}</td>
                   <td> {getTimeDifference(event)}</td>
                   <td>
-                    <label htmlFor={event.uid + "_CB"}>
+                    <label htmlFor={getIdentifier(event)+ "_CB"}>
                       <input
-                        id={event.uid + "_CB"}
+                        id={getIdentifier(event) + "_CB"}
                         type="checkbox"
-                        checked={includeInCalculation.get(event.uid!) || false}
+                        checked={includeInCalculation.get(getIdentifier(event)) || false}
                         onChange={(val) =>
-                          setChecked(event.uid!, val.target.checked)
+                          setChecked(event, val.target.checked)
                         }
                       />
                     </label>
