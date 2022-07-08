@@ -1,6 +1,5 @@
 import React, { ChangeEvent } from "react";
 import { useState } from "react";
-import { Dispatch, SetStateAction } from "react";
 import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
 
 import "./App.css";
