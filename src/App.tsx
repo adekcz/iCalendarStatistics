@@ -4,7 +4,7 @@ import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
 
 import "./App.css";
 
-function readFile(file: File, setIcalJson: (param: ICalJSON) => void ) {
+function readFile(file: File, setIcalJson: (param: ICalJSON) => void) {
   const reader = new FileReader();
 
   reader.onload = (event: ProgressEvent<FileReader>) => {
@@ -40,11 +40,6 @@ function onFileUpload(
   setContent: React.Dispatch<React.SetStateAction<ICalJSON>>,
   recalculateInclusion: (val: ICalJSON) => void
 ) {
-  // Create an object of formData
-  const formData = new FormData();
-
-  // Update the formData object
-  formData.append("myFile", file, file.name);
 
   // Details of the uploaded file
   console.log(file);
@@ -56,10 +51,6 @@ function onFileUpload(
     recalculateInclusion(val);
   });
   console.log(lines);
-
-  // Request made to the backend api
-  // Send formData object
-  //axios.post("api/uploadfile", formData);
 }
 
 function toDate(date: string): Date {
@@ -97,7 +88,6 @@ function getTimeDifference(event: EventJSON) {
 
 interface FileDataProps {
   file: File;
-  onFileChange: any;
 }
 
 // File content to be displayed after
@@ -170,86 +160,85 @@ function App() {
     setIncludeInCalculation(copy);
   }
 
-  function markAll(value: boolean){
+  function markAll(value: boolean) {
     let copy = new Map();
     includeInCalculation.forEach((_, key) => copy.set(key, value));
     setIncludeInCalculation(copy);
   }
-  let fileDataTile = file ? ( <FileData file={file} onFileChange={onFileChange} /> ) : null;
+  let fileDataTile = file ? (
+    <FileData file={file} />
+  ) : null;
   return (
-    <div>
+    <>
+      <h1>iCal statistics</h1>
       <div>
-        <h1>iCal statistics</h1>
+        <h3>Select *.ics file exported from your calendar.</h3>
         <div>
-          <h3>Select *.ics file exported from your calendar.</h3>
-          <div>
-            <input type="file" onChange={onFileChange} />
-          </div>
-        </div>
-        <div className="rowFlex">
-          {fileDataTile}
-          <div className="infoTile">
-            <h2> global stats</h2>
-            <div>
-              <p>total minutes: {Number(totalMinutes).toFixed(2)}</p>
-              <p>total hours: {Number(totalHours).toFixed(2)}</p>
-              <p>total days: {Number(totalDays).toFixed(2)}</p>
-            </div>
-          </div>
-          <div className="infoTile">
-            <h2> selected stats</h2>
-            <div>
-              <p>selected minutes: {Number(selectedMinutes).toFixed(2)}</p>
-              <p>selected hours: {Number(selectedHours).toFixed(2)}</p>
-              <p>selected days: {Number(selectedDays).toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-        <div>
-          <h2>Events</h2>
-          <button onClick={() => markAll(true)}>
-            Select all
-          </button>
-          <button onClick={() => markAll(false)}>
-            Deselect all
-          </button>
-          <table>
-            <thead>
-              <tr>
-                <th>summary</th>
-                <th>minutes</th>
-                <th>include</th>
-              </tr>
-            </thead>
-            <tbody>
-              {content.events.map((event) => (
-                <tr
-                  key={getEventJsonHashCode(event)}
-                  className={
-                    includeInCalculation.get(getEventJsonHashCode(event)) ? "checked" : ""
-                  }
-                >
-                  <td>{event.summary}</td>
-                  <td> {getTimeDifference(event)}</td>
-                  <td>
-                    <label htmlFor={getEventJsonHashCode(event)+ "_CB"}>
-                      <input
-                        id={getEventJsonHashCode(event) + "_CB"}
-                        type="checkbox"
-                        checked={includeInCalculation.get(getEventJsonHashCode(event)) || false}
-                        onChange={(val) =>
-                          setChecked(event, val.target.checked)
-                        }
-                      />
-                    </label>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <input type="file" onChange={onFileChange} />
         </div>
       </div>
-    </div>
+      <div className="rowFlex">
+        {fileDataTile}
+        <div className="infoTile">
+          <h2> global stats</h2>
+          <div>
+            <p>total minutes: {Number(totalMinutes).toFixed(2)}</p>
+            <p>total hours: {Number(totalHours).toFixed(2)}</p>
+            <p>total days: {Number(totalDays).toFixed(2)}</p>
+          </div>
+        </div>
+        <div className="infoTile">
+          <h2> selected stats</h2>
+          <div>
+            <p>selected minutes: {Number(selectedMinutes).toFixed(2)}</p>
+            <p>selected hours: {Number(selectedHours).toFixed(2)}</p>
+            <p>selected days: {Number(selectedDays).toFixed(2)}</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2>Events</h2>
+        <button onClick={() => markAll(true)}>Select all</button>
+        <button onClick={() => markAll(false)}>Deselect all</button>
+        <table>
+          <thead>
+            <tr>
+              <th>summary</th>
+              <th>minutes</th>
+              <th>include</th>
+            </tr>
+          </thead>
+          <tbody>
+            {content.events.map((event) => (
+              <tr
+                key={getEventJsonHashCode(event)}
+                className={
+                  includeInCalculation.get(getEventJsonHashCode(event))
+                    ? "checked"
+                    : ""
+                }
+              >
+                <td>{event.summary}</td>
+                <td> {getTimeDifference(event)}</td>
+                <td>
+                  <label htmlFor={getEventJsonHashCode(event) + "_CB"}>
+                    <input
+                      id={getEventJsonHashCode(event) + "_CB"}
+                      type="checkbox"
+                      checked={
+                        includeInCalculation.get(getEventJsonHashCode(event)) ||
+                        false
+                      }
+                      onChange={(val) => setChecked(event, val.target.checked)}
+                    />
+                  </label>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
