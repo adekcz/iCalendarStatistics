@@ -1,19 +1,23 @@
 import React, { ChangeEvent } from "react";
-import { useState } from "react";
+import { useReducer } from "react";
 import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
 
 import "./App.css";
 
-function readFile(file: File, setIcalJson: (param: ICalJSON) => void) {
+function readFile(file: File, dispatch: React.Dispatch<Action>) {
   const reader = new FileReader();
 
   reader.onload = (event: ProgressEvent<FileReader>) => {
     let target = event.target;
     if (target && target.result) {
-      const file = target.result;
-      if (typeof file === "string") {
-        const resultJSON = ICalParser.toJSON(file);
-        setIcalJson(resultJSON);
+      const fileData = target.result;
+      if (typeof fileData === "string") {
+        const resultJSON = ICalParser.toJSON(fileData);
+        console.log(resultJSON);
+        dispatch({
+          type: "upload-file",
+          payload: { file: file, content: resultJSON },
+        });
       } else {
         console.log("file is not string");
       }
@@ -35,21 +39,11 @@ function readFile(file: File, setIcalJson: (param: ICalJSON) => void) {
 }
 
 // On file upload (click the upload button)
-function onFileUpload(
-  file: File,
-  setContent: React.Dispatch<React.SetStateAction<ICalJSON>>,
-  recalculateInclusion: (val: ICalJSON) => void
-) {
-
+function uploadFile(file: File, dispatch: React.Dispatch<Action>) {
   // Details of the uploaded file
   console.log(file);
 
-  let lines = readFile(file, (val) => {
-    console.log(val);
-    setContent(ICalParser.toJSON(""));
-    setContent(val);
-    recalculateInclusion(val);
-  });
+  let lines = readFile(file, dispatch);
   console.log(lines);
 }
 
@@ -110,64 +104,79 @@ function getEventJsonHashCode(event: EventJSON) {
   return event.uid! + event.dtstamp?.value + event.dtstart.value;
 }
 
-function eventsInclusionDefault(content: ICalJSON) {
-  return content.events.reduce(function (
-    result: Map<string, boolean>,
-    event: EventJSON,
-    i: Number
-  ) {
-    result.set(getEventJsonHashCode(event), false); //hack to use !
-    return result;
-  },
-  new Map());
-}
+type State = {
+  file: File | null;
+  content: ICalJSON;
+  eventInclusions: Map<string, boolean>;
+};
+
+const initialState: State = {
+  file: null,
+  content: ICalParser.toJSON(""),
+  eventInclusions: new Map(),
+};
+
+type Action =
+  | { type: "upload-file"; payload: { file: File; content: ICalJSON } }
+  | { type: "set-checked"; payload: { event: EventJSON; isChecked: boolean } }
+  | { type: "mark-all"; isChecked: boolean };
+
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case "mark-all": {
+      let copy = new Map();
+      state.eventInclusions.forEach((_, key) =>
+        copy.set(key, action.isChecked)
+      );
+      return { ...state, eventInclusions: copy };
+    }
+    case "set-checked": {
+      let { event, isChecked } = action.payload;
+      let copy = new Map(state.eventInclusions);
+      copy.set(getEventJsonHashCode(event), isChecked);
+      return { ...state, eventInclusions: copy };
+    }
+    case "upload-file": {
+      let { file, content } = action.payload;
+
+      let eventInclusions = content.events.reduce(function (
+        result: Map<string, boolean>,
+        event: EventJSON,
+        i: Number
+      ) {
+        result.set(getEventJsonHashCode(event), false); //hack to use !
+        return result;
+      },
+      new Map());
+
+      return { eventInclusions: eventInclusions, file: file, content: content };
+    }
+  }
+};
 
 function App() {
-  let [file, setFile] = useState<File>();
+  const [state, dispatch] = useReducer(reducer, initialState);
 
-  let [content, setContent] = useState<ICalJSON>(ICalParser.toJSON(""));
   // On file select (from the pop up)
   let onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file: File = (event.target.files as FileList)[0];
-    setFile(file);
-    onFileUpload(file, setContent, recalculateInclusion);
+    uploadFile(file, dispatch);
   };
 
-  let totalMinutes = content.events
+  let totalMinutes = state.content.events
     .map((event) => getTimeDifference(event))
     .reduce((a, b) => a + b, 0);
   let totalHours = totalMinutes / 60;
   let totalDays = totalHours / 24;
 
-  let [includeInCalculation, setIncludeInCalculation] = useState(
-    eventsInclusionDefault(content)
-  );
-
-  let selectedMinutes = content.events
-    .filter((event) => includeInCalculation.get(getEventJsonHashCode(event)))
+  let selectedMinutes = state.content.events
+    .filter((event) => state.eventInclusions.get(getEventJsonHashCode(event)))
     .map((event) => getTimeDifference(event))
     .reduce((a, b) => a + b, 0);
   let selectedHours = selectedMinutes / 60;
   let selectedDays = selectedHours / 24;
 
-  function recalculateInclusion(val: ICalJSON) {
-    setIncludeInCalculation(eventsInclusionDefault(val));
-  }
-  function setChecked(event: EventJSON, checked: boolean) {
-    let copy = new Map();
-    includeInCalculation.forEach((val, key) => copy.set(key, val));
-    copy.set(getEventJsonHashCode(event), checked);
-    setIncludeInCalculation(copy);
-  }
-
-  function markAll(value: boolean) {
-    let copy = new Map();
-    includeInCalculation.forEach((_, key) => copy.set(key, value));
-    setIncludeInCalculation(copy);
-  }
-  let fileDataTile = file ? (
-    <FileData file={file} />
-  ) : null;
+  let fileDataTile = state.file ? <FileData file={state.file} /> : null;
   return (
     <>
       <h1>iCal statistics</h1>
@@ -198,8 +207,14 @@ function App() {
       </div>
       <div>
         <h2>Events</h2>
-        <button onClick={() => markAll(true)}>Select all</button>
-        <button onClick={() => markAll(false)}>Deselect all</button>
+        <button onClick={() => dispatch({ type: "mark-all", isChecked: true })}>
+          Select all
+        </button>
+        <button
+          onClick={() => dispatch({ type: "mark-all", isChecked: false })}
+        >
+          Deselect all
+        </button>
         <table>
           <thead>
             <tr>
@@ -209,11 +224,11 @@ function App() {
             </tr>
           </thead>
           <tbody>
-            {content.events.map((event) => (
+            {state.content.events.map((event) => (
               <tr
                 key={getEventJsonHashCode(event)}
                 className={
-                  includeInCalculation.get(getEventJsonHashCode(event))
+                  state.eventInclusions.get(getEventJsonHashCode(event))
                     ? "checked"
                     : ""
                 }
@@ -226,10 +241,19 @@ function App() {
                       id={getEventJsonHashCode(event) + "_CB"}
                       type="checkbox"
                       checked={
-                        includeInCalculation.get(getEventJsonHashCode(event)) ||
-                        false
+                        state.eventInclusions.get(
+                          getEventJsonHashCode(event)
+                        ) || false
                       }
-                      onChange={(val) => setChecked(event, val.target.checked)}
+                      onChange={(val) =>
+                        dispatch({
+                          type: "set-checked",
+                          payload: {
+                            event: event,
+                            isChecked: val.target.checked,
+                          },
+                        })
+                      }
                     />
                   </label>
                 </td>
