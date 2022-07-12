@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from "react";
-import { useReducer } from "react";
+import { useState, useReducer } from "react";
 import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
 import { getDurationInMinutes } from "./utils/DateUtils";
 import { readFile } from "./utils/FileUtils";
@@ -66,8 +66,53 @@ function eventToTimeInterval(input: EventJSON) {
   return { start: input.dtstart.value, end: input.dtend.value };
 }
 
+let renderTableRow = function (
+  event: EventJSON,
+  state: State,
+  dispatch: React.Dispatch<Action>,
+  showAllData: boolean
+) {
+  return (
+    <tr
+      key={getEventJsonHashCode(event)}
+      className={
+        state.eventInclusions.get(getEventJsonHashCode(event)) ? "checked" : ""
+      }
+    >
+      <td>{event.summary}</td>
+      <td> {getDurationInMinutes(eventToTimeInterval(event))}</td>
+      <td>
+        <label htmlFor={getEventJsonHashCode(event) + "_CB"}>
+          <input
+            id={getEventJsonHashCode(event) + "_CB"}
+            type="checkbox"
+            checked={
+              state.eventInclusions.get(getEventJsonHashCode(event)) || false
+            }
+            onChange={(val) =>
+              dispatch({
+                type: "set-checked",
+                payload: {
+                  event: event,
+                  isChecked: val.target.checked,
+                },
+              })
+            }
+          />
+        </label>
+      </td>
+      {!showAllData || (
+        <td>
+          <div className="fixedSized">{JSON.stringify(event)}</div>
+        </td>
+      )}
+    </tr>
+  );
+};
+
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [showAllData, setShowAllData] = useState(false);
 
   // On file select (from the pop up)
   let onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -91,6 +136,7 @@ function App() {
     .reduce((a, b) => a + b, 0);
 
   let fileDataTile = state.file ? <FileData file={state.file} /> : null;
+
   return (
     <>
       <h1>iCal statistics</h1>
@@ -107,58 +153,41 @@ function App() {
       </div>
       <div>
         <h2>Events</h2>
-        <button onClick={() => dispatch({ type: "mark-all", isChecked: true })}>
-          Select all
-        </button>
-        <button
-          onClick={() => dispatch({ type: "mark-all", isChecked: false })}
-        >
-          Deselect all
-        </button>
+        <div className="tableControls">
+          <button
+            onClick={() => dispatch({ type: "mark-all", isChecked: true })}
+          >
+            Select all
+          </button>
+          <button
+            onClick={() => dispatch({ type: "mark-all", isChecked: false })}
+          >
+            Deselect all
+          </button>
+          <label htmlFor={"showAllData"}>
+            show all data
+            <input
+              id="showAllData"
+              type="checkbox"
+              checked={showAllData}
+              onChange={(val) => setShowAllData(val.target.checked)}
+            />
+          </label>
+        </div>
+
         <table>
           <thead>
             <tr>
               <th>summary</th>
               <th>minutes</th>
               <th>include</th>
+              {!showAllData || <th>all data</th>}
             </tr>
           </thead>
           <tbody>
-            {state.content.events.map((event) => (
-              <tr
-                key={getEventJsonHashCode(event)}
-                className={
-                  state.eventInclusions.get(getEventJsonHashCode(event))
-                    ? "checked"
-                    : ""
-                }
-              >
-                <td>{event.summary}</td>
-                <td> {getDurationInMinutes(eventToTimeInterval(event))}</td>
-                <td>
-                  <label htmlFor={getEventJsonHashCode(event) + "_CB"}>
-                    <input
-                      id={getEventJsonHashCode(event) + "_CB"}
-                      type="checkbox"
-                      checked={
-                        state.eventInclusions.get(
-                          getEventJsonHashCode(event)
-                        ) || false
-                      }
-                      onChange={(val) =>
-                        dispatch({
-                          type: "set-checked",
-                          payload: {
-                            event: event,
-                            isChecked: val.target.checked,
-                          },
-                        })
-                      }
-                    />
-                  </label>
-                </td>
-              </tr>
-            ))}
+            {state.content.events.map((event) =>
+              renderTableRow(event, state, dispatch, showAllData)
+            )}
           </tbody>
         </table>
       </div>
