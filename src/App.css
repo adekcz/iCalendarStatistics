@@ -1,60 +1,60 @@
-
 .checked {
-    background-color: lightblue;
+  background-color: lightblue;
 }
 tr {
-    height: 1px;
+  height: 1px;
 }
 
 label {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 td label {
-    display: block;
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 100%; /* for the latest browsers which support min-height */
-    height: auto !important; /* for newer IE versions */
-    height: 100%; /* the only height-related attribute that IE6 does not ignore  */
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%; /* for the latest browsers which support min-height */
+  height: auto !important; /* for newer IE versions */
+  height: 100%; /* the only height-related attribute that IE6 does not ignore  */
 }
 
 td label input {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .rowFlex {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
 }
 
 .tableControls * {
-    margin: 0px 5px 5px 5px;
+  margin: 0px 5px 5px 5px;
 }
 
 .infoTile {
-    padding: 0px 10px 0px 10px;
+  padding: 0px 10px 0px 10px;
 }
 table {
-    table-layout: fixed;
+  table-layout: fixed;
 }
 
-
-th, th, td {
-    border: thin solid black;
-    height: 100%;
-    padding: 0px 10px;
+th,
+th,
+td {
+  border: thin solid black;
+  height: 100%;
+  padding: 0px 10px;
 }
 
 .fixedSized {
-    max-width: 250px;
-    overflow: hidden;
+  max-width: 250px;
+  overflow: hidden;
 }
 .fixedSized:hover {
-    overflow: visible;
+  overflow: visible;
 }
 .fixedTd {
-    width: 10%;
-    overflow: hidden;   
+  width: 10%;
+  overflow: hidden;
 }
