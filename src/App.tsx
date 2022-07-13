@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from "react";
 import { useState, useReducer } from "react";
 import ICalParser, { EventJSON, ICalJSON } from "ical-js-parser";
-import { getDurationInMinutes } from "./utils/DateUtils";
+import { getDurationInMinutes, toDate } from "./utils/DateUtils";
 import { readFile } from "./utils/FileUtils";
 
 import { FileData } from "./components/FileData";
@@ -79,6 +79,9 @@ let renderTableRow = function (
         state.eventInclusions.get(getEventJsonHashCode(event)) ? "checked" : ""
       }
     >
+      <td>{toDate(event.dtstart.value).toLocaleString()}</td>
+      <td>{toDate(event.dtend.value).toLocaleString()}</td>
+
       <td>{event.summary}</td>
       <td> {getDurationInMinutes(eventToTimeInterval(event))}</td>
       <td>
@@ -178,6 +181,8 @@ function App() {
         <table>
           <thead>
             <tr>
+              <th>date start</th>
+              <th>date end</th>
               <th>summary</th>
               <th>minutes</th>
               <th>include</th>

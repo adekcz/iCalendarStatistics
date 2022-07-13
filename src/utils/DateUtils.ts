@@ -35,4 +35,4 @@ function toDate(date: string): Date {
   );
 }
 
-export { getDurationInMinutes };
+export { getDurationInMinutes, toDate };
