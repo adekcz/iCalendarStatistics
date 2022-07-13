@@ -8,6 +8,10 @@ import { FileData } from "./components/FileData";
 import { FileInfoTile } from "./components/FileInfoTile";
 import "./App.css";
 
+import DatePicker from "react-datepicker";
+
+import "react-datepicker/dist/react-datepicker.css";
+
 function getEventJsonHashCode(event: EventJSON) {
   return event.uid! + event.dtstamp?.value + event.dtstart.value;
 }
@@ -113,9 +117,17 @@ let renderTableRow = function (
   );
 };
 
+function filterDates(events: EventJSON[], startDate: Date, endDate: Date) : EventJSON[] {
+  return events
+    .filter(event => toDate(event.dtstart.value) >= startDate)
+    .filter(event => toDate(event.dtend.value) <= endDate);
+}
+
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [showAllData, setShowAllData] = useState(false);
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
 
   // On file select (from the pop up)
   let onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -129,11 +141,11 @@ function App() {
     readFile(file, readICalJSON);
   };
 
-  let totalMinutes = state.content.events
+  let totalMinutes = filterDates(state.content.events, startDate, endDate)
     .map((event) => getDurationInMinutes(eventToTimeInterval(event)))
     .reduce((a, b) => a + b, 0);
 
-  let selectedMinutes = state.content.events
+  let selectedMinutes = filterDates(state.content.events, startDate, endDate)
     .filter((event) => state.eventInclusions.get(getEventJsonHashCode(event)))
     .map((event) => getDurationInMinutes(eventToTimeInterval(event)))
     .reduce((a, b) => a + b, 0);
@@ -176,6 +188,15 @@ function App() {
               onChange={(val) => setShowAllData(val.target.checked)}
             />
           </label>
+          <label htmlFor="startDatePicker">
+          start
+          <DatePicker id="startDatePicker" selected={startDate} onChange={(date:Date) => setStartDate(date)} />
+          </label>
+          <label htmlFor="endDatePicker">
+          end
+          <DatePicker id="endDatePicker" selected={endDate} onChange={(date:Date) => setEndDate(date)} />
+          </label>
+        
         </div>
 
         <table>
@@ -190,7 +211,7 @@ function App() {
             </tr>
           </thead>
           <tbody>
-            {state.content.events.map((event) =>
+            {filterDates(state.content.events, startDate, endDate).map((event) =>
               renderTableRow(event, state, dispatch, showAllData)
             )}
           </tbody>
