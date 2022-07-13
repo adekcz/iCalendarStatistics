@@ -126,7 +126,7 @@ function filterDates(events: EventJSON[], startDate: Date, endDate: Date) : Even
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [showAllData, setShowAllData] = useState(false);
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date("2022/06/01"));
   const [endDate, setEndDate] = useState(new Date());
 
   // On file select (from the pop up)
@@ -190,11 +190,24 @@ function App() {
           </label>
           <label htmlFor="startDatePicker">
           start
-          <DatePicker id="startDatePicker" selected={startDate} onChange={(date:Date) => setStartDate(date)} />
+          <DatePicker
+        selected={startDate}
+        onChange={(date) => setStartDate(date || new Date())}
+        selectsStart
+        startDate={startDate}
+        endDate={endDate}
+      />
           </label>
           <label htmlFor="endDatePicker">
           end
-          <DatePicker id="endDatePicker" selected={endDate} onChange={(date:Date) => setEndDate(date)} />
+          <DatePicker
+        selected={endDate}
+        onChange={(date) => setEndDate(date  || new Date())}
+        selectsEnd
+        startDate={startDate}
+        endDate={endDate}
+        minDate={startDate}
+      />
           </label>
         
         </div>
