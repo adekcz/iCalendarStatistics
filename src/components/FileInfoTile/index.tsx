@@ -1,10 +1,14 @@
-function FileInfoTile(props: { label: string; minutes: number }) {
-  let minutes = props.minutes;
-  let hours = props.minutes / 60;
+interface FileInfoTileProps {
+  label: string; 
+  minutes: number 
+}
+
+function FileInfoTile({label, minutes}: FileInfoTileProps) {
+  let hours = minutes / 60;
   let days = hours / 24;
   return (
     <div className="infoTile">
-      <h2> {props.label}</h2>
+      <h2> {label}</h2>
       <div>
         <p>total minutes: {minutes.toFixed(2)}</p>
         <p>total hours: {hours.toFixed(2)}</p>
